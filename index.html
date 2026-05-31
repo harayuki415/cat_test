@@ -16,13 +16,11 @@
             padding: 10px; 
             box-sizing: border-box;
         }
-        /* ゲーム全体を包むコンテナ */
         .game-container {
             width: 100%;
             max-width: 800px;
             text-align: center;
         }
-        /* タイトルと説明文 */
         .game-title {
             color: #d81b60;
             font-size: 24px;
@@ -33,7 +31,6 @@
             font-size: 14px;
             margin: 0 0 15px 0;
         }
-        /* ゲーム画面本体 */
         .game-screen {
             position: relative;
             width: 100%;
@@ -47,7 +44,6 @@
             flex-direction: column; 
             overflow: hidden;
         }
-        /* 画像エリア（残りのスペースを全部使う） */
         .character-area {
             flex: 1;
             display: flex;
@@ -62,7 +58,6 @@
             object-fit: contain; 
             transition: all 0.3s ease;
         }
-        /* UIエリア（一番下） */
         .ui-bottom {
             padding: 10px;
             background: rgba(255, 255, 255, 0.5); 
@@ -79,7 +74,7 @@
             border-radius: 5px;
             border: 2px solid #ffb6c1;
         }
-        button {
+        .send-btn {
             padding: 0 20px;
             font-size: 16px;
             background-color: #d81b60;
@@ -88,6 +83,11 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+        }
+        .send-btn:disabled, input[type="text"]:disabled {
+            background-color: #ccc;
+            border-color: #aaa;
+            cursor: not-allowed;
         }
         .dialogue-box {
             height: 100px;
@@ -109,7 +109,20 @@
             font-size: 15px;
             line-height: 1.5;
         }
-        /* 考え中表示 */
+        /* 新しく追加したリセットボタンのスタイルっす */
+        .restart-btn {
+            display: none; /* 最初は隠しておくっす */
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
         .loading {
             display: none;
             color: #d81b60;
@@ -122,7 +135,6 @@
             border-radius: 5px;
             z-index: 10;
         }
-        /* PC向けの微調整 */
         @media (min-width: 600px) {
             .game-title { font-size: 28px; }
             .game-desc { font-size: 16px; }
@@ -146,12 +158,13 @@
             <div class="ui-bottom">
                 <div class="input-area">
                     <input type="text" id="user-input" placeholder="猫に話しかける言葉を入力...">
-                    <button onclick="sendMessage()">送信</button>
+                    <button class="send-btn" id="send-btn" onclick="sendMessage()">送信</button>
                 </div>
                 <div class="dialogue-box">
                     <div class="speaker">伝説のPM猫</div>
                     <div class="message" id="cat-message">にゃーん。（上の枠から話しかけてみてね）</div>
                 </div>
+                <button class="restart-btn" id="restart-btn" onclick="location.reload()">もう1回最初からやる</button>
             </div>
         </div>
     </div>
@@ -162,16 +175,17 @@
         
         let conversationId = "";
 
-        // Enterキーで送信できるようにするおまけ機能っす
         document.getElementById('user-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendMessage();
         });
 
         async function sendMessage() {
             const inputField = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
             const messageBox = document.getElementById('cat-message');
             const loading = document.getElementById('loading');
             const catImage = document.getElementById('cat-image');
+            const restartBtn = document.getElementById('restart-btn');
             
             const text = inputField.value;
             if (!text) return;
@@ -212,6 +226,14 @@
                     messageBox.innerText = answer;
                     
                     conversationId = data.conversation_id;
+
+                    // ゲームクリアかゲームオーバーの文字が出たらボタンを表示して入力をロックするっす
+                    if (answer.includes('ゲームクリア') || answer.includes('ゲームオーバー')) {
+                        restartBtn.style.display = 'block';
+                        inputField.disabled = true;
+                        sendBtn.disabled = true;
+                    }
+
                 } else {
                     messageBox.innerText = 'エラーになっちゃったっす...';
                 }
