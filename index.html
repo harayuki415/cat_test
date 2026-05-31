@@ -2,65 +2,75 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI猫面接シミュレーター</title>
     <style>
         body {
-            background-color: #000;
+            background-color: #fce4ec; 
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             font-family: sans-serif;
+            padding: 10px; 
+            box-sizing: border-box;
         }
+        /* ゲーム全体を包むコンテナ */
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        /* タイトルと説明文 */
+        .game-title {
+            color: #d81b60;
+            font-size: 24px;
+            margin: 0 0 5px 0;
+        }
+        .game-desc {
+            color: #555;
+            font-size: 14px;
+            margin: 0 0 15px 0;
+        }
+        /* ゲーム画面本体 */
         .game-screen {
             position: relative;
-            width: 800px;
-            height: 600px;
-            background-color: #fce4ec; /* 優しいパステルピンク */
-            overflow: hidden;
+            width: 100%;
+            height: 65vh; 
+            min-height: 480px;
+            max-height: 600px;
+            background-color: #fff0f5; 
             border: 4px solid #ffb6c1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column; 
+            overflow: hidden;
         }
-        /* キャラクター画像の配置 */
+        /* 画像エリア（残りのスペースを全部使う） */
+        .character-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; 
+            overflow: hidden;
+            padding: 10px;
+        }
         .character {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 350px;
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain; 
             transition: all 0.3s ease;
         }
-        /* FGO風のセリフ枠 */
-        .dialogue-box {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            height: 120px;
-            background: rgba(0, 50, 100, 0.8);
-            border: 2px solid #88ccff;
-            color: #fff;
-            padding: 15px;
-            border-radius: 5px;
+        /* UIエリア（一番下） */
+        .ui-bottom {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5); 
         }
-        .speaker {
-            color: #88ccff;
-            font-weight: bold;
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-        .message {
-            font-size: 18px;
-            line-height: 1.5;
-        }
-        /* 入力エリア */
         .input-area {
-            position: absolute;
-            bottom: 180px;
-            left: 20px;
-            right: 20px;
             display: flex;
-            gap: 10px;
+            gap: 5px;
+            margin-bottom: 10px;
         }
         input[type="text"] {
             flex: 1;
@@ -70,13 +80,34 @@
             border: 2px solid #ffb6c1;
         }
         button {
-            padding: 10px 20px;
+            padding: 0 20px;
             font-size: 16px;
             background-color: #d81b60;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
+        }
+        .dialogue-box {
+            height: 100px;
+            background: rgba(0, 50, 100, 0.85);
+            border: 2px solid #88ccff;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            overflow-y: auto;
+        }
+        .speaker {
+            color: #88ccff;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        .message {
+            font-size: 15px;
+            line-height: 1.5;
         }
         /* 考え中表示 */
         .loading {
@@ -84,31 +115,44 @@
             color: #d81b60;
             font-weight: bold;
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255,255,255,0.8);
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
             padding: 5px 10px;
             border-radius: 5px;
+            z-index: 10;
+        }
+        /* PC向けの微調整 */
+        @media (min-width: 600px) {
+            .game-title { font-size: 28px; }
+            .game-desc { font-size: 16px; }
+            .dialogue-box { height: 120px; }
+            .message { font-size: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="game-screen">
-        <div class="loading" id="loading">🐾 猫が考えているにゃ...</div>
-        
-        <!-- 初期画像 -->
-        <img src="cat_00.png" class="character" id="cat-image" alt="猫">
-        
-        <!-- プレイヤーの入力エリア -->
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="猫に話しかける言葉を入力...">
-            <button onclick="sendMessage()">送信</button>
-        </div>
+    <div class="game-container">
+        <h1 class="game-title">🐾 伝説のPM猫を採用せよ！</h1>
+        <p class="game-desc">ギルドの運命は、あなたの面接スキルにかかっているにゃ。</p>
 
-        <!-- セリフ枠 -->
-        <div class="dialogue-box">
-            <div class="speaker">伝説のPM猫</div>
-            <div class="message" id="cat-message">にゃーん。（上の枠から話しかけてみてね）</div>
+        <div class="game-screen">
+            <div class="loading" id="loading">🐾 猫が考えているにゃ...</div>
+            
+            <div class="character-area">
+                <img src="cat_00.png" class="character" id="cat-image" alt="猫">
+            </div>
+            
+            <div class="ui-bottom">
+                <div class="input-area">
+                    <input type="text" id="user-input" placeholder="猫に話しかける言葉を入力...">
+                    <button onclick="sendMessage()">送信</button>
+                </div>
+                <div class="dialogue-box">
+                    <div class="speaker">伝説のPM猫</div>
+                    <div class="message" id="cat-message">にゃーん。（上の枠から話しかけてみてね）</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -117,6 +161,11 @@
         const apiKey = 'app-VKUgziOJxnhMRja03TihFcPa'; 
         
         let conversationId = "";
+
+        // Enterキーで送信できるようにするおまけ機能っす
+        document.getElementById('user-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
 
         async function sendMessage() {
             const inputField = document.getElementById('user-input');
@@ -127,13 +176,11 @@
             const text = inputField.value;
             if (!text) return;
 
-            // ユーザーの入力を一旦リセットして、ローディングを表示
             inputField.value = '';
             messageBox.innerText = '...';
             loading.style.display = 'block';
 
             try {
-                // DifyのAPIに話しかける
                 const response = await fetch('https://api.dify.ai/v1/chat-messages', {
                     method: 'POST',
                     headers: {
@@ -155,18 +202,15 @@
                 if (data.answer) {
                     let answer = data.answer;
                     
-                    // プロンプトから返ってきたURLを検知して、猫の画像を切り替える仕組みっす！
                     if (answer.includes('cat_00.png')) catImage.src = 'cat_00.png';
                     if (answer.includes('cat_01.png')) catImage.src = 'cat_01.png';
                     if (answer.includes('cat_02.png')) catImage.src = 'cat_02.png';
                     if (answer.includes('cat_03.png')) catImage.src = 'cat_03.png';
                     if (answer.includes('cat_04.png')) catImage.src = 'cat_04.png';
 
-                    // 画面のセリフ枠には画像URLを出したくないので、テキストだけ綺麗に抜き取るっす
                     answer = answer.replace(/!\[.*?\]\(.*?\)/g, '').trim();
                     messageBox.innerText = answer;
                     
-                    // 会話の続きができるようにIDを保存するっす
                     conversationId = data.conversation_id;
                 } else {
                     messageBox.innerText = 'エラーになっちゃったっす...';
